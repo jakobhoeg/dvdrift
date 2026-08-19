@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
+
+  pack:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Pack tool
+        run: dotnet pack src/Dataverse.SolutionDiff.Cli/Dataverse.SolutionDiff.Cli.csproj --configuration Release --output artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
+
+  action-smoke:
+    # Exercises the composite action end to end against the locally packed tool,
+    # so the shipped pipeline integration cannot rot unnoticed.
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Pack and install the tool locally
+        run: |
+          dotnet pack src/Dataverse.SolutionDiff.Cli/Dataverse.SolutionDiff.Cli.csproj \
+            --configuration Release --output local-nupkg
+          dotnet tool install --global DataverseDrift --add-source local-nupkg \
+            --prerelease --ignore-failed-sources
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+      - name: Build synthetic snapshots
+        run: |
+          mkdir -p snap/baseline snap/current
+          for dir in snap/baseline snap/current; do
+            cat > "$dir/solution.xml" <<'XML'
+          <ImportExportXml version="9.2.0.0" SolutionPackageVersion="9.2" languagecode="1033">
+            <SolutionManifest>
+              <UniqueName>ContosoBase</UniqueName>
+              <Version>1.0.0.1</Version>
+              <Managed>0</Managed>
+            </SolutionManifest>
+          </ImportExportXml>
+          XML
+            echo '<Types />' > "$dir/[Content_Types].xml"
+          done
+          write_customizations() {
+            cat > "$1/customizations.xml" <<XML
+          <ImportExportXml OrganizationVersion="$2">
+            <Entities>
+              <Entity>
+                <Name LocalizedName="Account" OriginalName="">Account</Name>
+                <EntityInfo>
+                  <entity Name="Account">
+                    <attributes>
+          $3
+                    </attributes>
+                  </entity>
+                </EntityInfo>
+              </Entity>
+            </Entities>
+          </ImportExportXml>
+          XML
+          }
+          attr_foo='            <attribute PhysicalName="custom_foo"><Type>text</Type><LogicalName>custom_foo</LogicalName><IntroducedVersion>1.0.0.1</IntroducedVersion></attribute>'
+          attr_bar='            <attribute PhysicalName="custom_bar"><Type>text</Type><LogicalName>custom_bar</LogicalName><IntroducedVersion>1.0.0.2</IntroducedVersion></attribute>'
+          write_customizations snap/baseline 9.2.26071.167 "$attr_foo"
+          # Same components, different re-serialization noise -> must report no change.
+          write_customizations snap/current 9.2.26071.999 "$attr_foo"
+          cp -r snap/current snap/changed
+          write_customizations snap/changed 9.2.26071.999 "$attr_foo
+          $attr_bar"
+
+      - name: Action - noise only, expect no change
+        id: unchanged
+        uses: ./
+        with:
+          baseline: snap/baseline
+          current: snap/current
+          out: unchanged.md
+          offline: "true"
+
+      - name: Action - real change, expect changed
+        id: changed
+        uses: ./
+        with:
+          baseline: snap/baseline
+          current: snap/changed
+          out: changed.md
+          offline: "true"
+
+      - name: Assert outputs
+        run: |
+          set -e
+          test "${{ steps.unchanged.outputs.changed }}" = "false" \
+            || { echo "expected changed=false for noise-only diff"; cat unchanged.md; exit 1; }
+          test "${{ steps.changed.outputs.changed }}" = "true" \
+            || { echo "expected changed=true for added attribute"; cat changed.md; exit 1; }
+          test -f "${{ steps.changed.outputs.report-path }}"

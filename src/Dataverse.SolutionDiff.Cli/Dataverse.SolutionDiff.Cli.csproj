@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Dataverse.SolutionDiff.Cli</RootNamespace>
+
+    <!-- .NET global tool packaging -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dvdrift</ToolCommandName>
+    <PackageId>DataverseDrift</PackageId>
+    <Version>0.1.0</Version>
+    <Description>Know what changed in a shared Dataverse environment, who changed it, and what was left running. Deterministic, no AI.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>dataverse;powerplatform;crm;diff;drift;alm;governance</PackageTags>
+    <!-- TODO: set once the repo has a public home
+    <RepositoryUrl>https://github.com/YOUR-ORG/dataverse-solution-diff</RepositoryUrl>
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\docs\*.md" Pack="true" PackagePath="docs\" />
+    <None Include="..\..\docs\recipes\*.md" Pack="true" PackagePath="docs\recipes\" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
+    <ProjectReference Include="..\Dataverse.SolutionDiff\Dataverse.SolutionDiff.csproj" />
+  </ItemGroup>
+
+</Project>

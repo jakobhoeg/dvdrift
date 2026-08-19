@@ -1,0 +1,161 @@
+# Reusable Azure Pipelines steps template: install dvdrift, diff two solution
+# snapshots, publish the report, and expose whether anything changed.
+#
+#   resources:
+#     repositories:
+#       - repository: dvdrift
+#         type: github          # or 'git' for an Azure Repos mirror
+#         name: YOUR-ORG/dataverse-solution-diff
+#         ref: refs/tags/v1
+#
+#   steps:
+#     - template: pipelines/templates/dvdrift-steps.yml@dvdrift
+#       parameters:
+#         baseline: $(Pipeline.Workspace)/baseline
+#         current: $(Build.ArtifactStagingDirectory)/current.zip
+#         url: $(DataverseUrl)
+#         clientId: $(DataverseAppId)
+#         clientSecret: $(DataverseSecret)
+#         tenantId: $(TenantId)
+
+parameters:
+  # Snapshot inputs: solution .zip, container zip/folder, raw extract, or pac-unpacked folder.
+  - name: baseline
+    type: string
+  - name: current
+    type: string
+
+  # Report shape and destination.
+  - name: format
+    type: string
+    default: md
+    values: [md, json]
+  - name: out
+    type: string
+    default: $(Build.ArtifactStagingDirectory)/dvdrift-report.md
+  - name: config
+    type: string
+    default: ''
+  - name: workingDirectory
+    type: string
+    default: $(Build.SourcesDirectory)
+
+  # Behavior.
+  - name: offline
+    type: boolean
+    default: false
+  - name: failOnChange
+    type: boolean
+    default: false
+  - name: publishArtifact
+    type: boolean
+    default: true
+  - name: artifactName
+    type: string
+    default: solution-diff
+  - name: buildSummary
+    type: boolean
+    default: true
+  - name: toolVersion
+    type: string
+    default: ''
+  - name: name
+    type: string
+    default: dvdrift   # step name; read outputs as $(<name>.changed)
+
+  # Attribution join. Pass secrets as pipeline variables - they reach the tool as
+  # environment variables, never as command-line arguments.
+  - name: url
+    type: string
+    default: ''
+  - name: tenantId
+    type: string
+    default: ''
+  - name: clientId
+    type: string
+    default: ''
+  - name: clientSecret
+    type: string
+    default: ''
+  - name: accessToken
+    type: string
+    default: ''
+
+steps:
+  - task: UseDotNet@2
+    displayName: Use .NET 8 SDK
+    inputs:
+      packageType: sdk
+      version: 8.x
+
+  - task: PowerShell@2
+    displayName: Install dvdrift
+    inputs:
+      targetType: inline
+      pwsh: true
+      script: |
+        $ErrorActionPreference = 'Stop'
+        $args = @('tool', 'install', '--global', 'DataverseDrift')
+        if ('${{ parameters.toolVersion }}') { $args += @('--version', '${{ parameters.toolVersion }}') }
+        & dotnet $args
+        if ($LASTEXITCODE -ne 0) { throw "dvdrift install failed with exit code $LASTEXITCODE" }
+        Write-Host "##vso[task.prependpath]$HOME/.dotnet/tools"
+        Write-Host "##vso[task.prependpath]$env:USERPROFILE\.dotnet\tools"
+
+  - task: PowerShell@2
+    displayName: Diff solution snapshots
+    name: ${{ parameters.name }}
+    inputs:
+      targetType: inline
+      pwsh: true
+      workingDirectory: ${{ parameters.workingDirectory }}
+      script: |
+        $ErrorActionPreference = 'Continue'
+
+        # --fail-on-change is always passed so exit code 1 reads as "changed";
+        # whether that fails the build is decided from the failOnChange parameter.
+        $dvArgs = @('${{ parameters.baseline }}', '${{ parameters.current }}',
+                    '--format', '${{ parameters.format }}',
+                    '--out', '${{ parameters.out }}', '--fail-on-change')
+        if ('${{ parameters.config }}') { $dvArgs += @('--config', '${{ parameters.config }}') }
+        if ($env:DVDRIFT_OFFLINE -eq 'true') { $dvArgs += '--offline' }
+
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent '${{ parameters.out }}') | Out-Null
+        & dvdrift $dvArgs
+        $code = $LASTEXITCODE
+
+        if ($code -ge 2) {
+          Write-Host "##vso[task.logissue type=error]dvdrift failed with exit code $code"
+          exit $code
+        }
+
+        $changed = if ($code -eq 1) { 'true' } else { 'false' }
+        Write-Host "##vso[task.setvariable variable=changed;isOutput=true]$changed"
+        Write-Host "##vso[task.setvariable variable=reportPath;isOutput=true]${{ parameters.out }}"
+
+        if ($env:DVDRIFT_SUMMARY -eq 'true' -and '${{ parameters.format }}' -eq 'md') {
+          Write-Host "##vso[task.uploadsummary]${{ parameters.out }}"
+        }
+
+        if ($changed -eq 'true' -and $env:DVDRIFT_FAIL_ON_CHANGE -eq 'true') {
+          Write-Host "##vso[task.logissue type=error]Changes detected and failOnChange is enabled."
+          exit 1
+        }
+        exit 0
+    env:
+      DATAVERSE_URL: ${{ parameters.url }}
+      DATAVERSE_TENANT_ID: ${{ parameters.tenantId }}
+      DATAVERSE_CLIENT_ID: ${{ parameters.clientId }}
+      DATAVERSE_CLIENT_SECRET: ${{ parameters.clientSecret }}
+      DATAVERSE_ACCESS_TOKEN: ${{ parameters.accessToken }}
+      DVDRIFT_OFFLINE: ${{ lower(parameters.offline) }}
+      DVDRIFT_FAIL_ON_CHANGE: ${{ lower(parameters.failOnChange) }}
+      DVDRIFT_SUMMARY: ${{ lower(parameters.buildSummary) }}
+
+  - ${{ if eq(parameters.publishArtifact, true) }}:
+      - task: PublishPipelineArtifact@1
+        displayName: Publish diff report
+        condition: succeededOrFailed()
+        inputs:
+          targetPath: ${{ parameters.out }}
+          artifact: ${{ parameters.artifactName }}

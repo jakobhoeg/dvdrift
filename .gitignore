@@ -1,0 +1,25 @@
+# Build output
+bin/
+obj/
+artifacts/
+publish/
+
+# Test results
+TestResults/
+*.trx
+coverage*.xml
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Local tooling
+.tools/
+*.nupkg
+*.snupkg

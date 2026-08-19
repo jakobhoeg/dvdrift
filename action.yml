@@ -1,0 +1,158 @@
+name: Dataverse Solution Diff
+description: Deterministic change & accountability report for two Dataverse solution snapshots.
+branding:
+  icon: git-commit
+  color: blue
+
+inputs:
+  baseline:
+    description: Baseline snapshot - solution .zip, container zip/folder, raw extract, or pac-unpacked folder.
+    required: true
+  current:
+    description: Current snapshot (same accepted formats; need not match the baseline format).
+    required: true
+  format:
+    description: Report format, md or json.
+    required: false
+    default: md
+  out:
+    description: Path to write the report to.
+    required: false
+    default: dvdrift-report.md
+  config:
+    description: Path to a dvdrift.json config file. Defaults to dvdrift.json in the working directory if present.
+    required: false
+    default: ''
+  offline:
+    description: Skip the Dataverse attribution/state join entirely.
+    required: false
+    default: 'false'
+  fail-on-change:
+    description: Fail the step when any change is detected. The `changed` output is set either way.
+    required: false
+    default: 'false'
+  job-summary:
+    description: Append a Markdown report to the GitHub job summary. Ignored when format is json.
+    required: false
+    default: 'true'
+  working-directory:
+    description: Directory to resolve snapshot paths from.
+    required: false
+    default: '.'
+  tool-version:
+    description: Version of the DataverseDrift global tool to install. Defaults to the latest release.
+    required: false
+    default: ''
+  url:
+    description: Dataverse environment URL for the attribution join.
+    required: false
+    default: ''
+  tenant-id:
+    description: Tenant id for client-credentials auth.
+    required: false
+    default: ''
+  client-id:
+    description: App registration client id for client-credentials auth.
+    required: false
+    default: ''
+  client-secret:
+    description: Client secret for client-credentials auth.
+    required: false
+    default: ''
+  access-token:
+    description: Pre-acquired Dataverse access token, as an alternative to client credentials.
+    required: false
+    default: ''
+
+outputs:
+  report-path:
+    description: Path of the generated report.
+    value: ${{ steps.diff.outputs.report-path }}
+  changed:
+    description: Set to "true" when the diff found at least one change.
+    value: ${{ steps.diff.outputs.changed }}
+
+runs:
+  using: composite
+  steps:
+    - name: Verify .NET SDK
+      shell: bash
+      run: |
+        if ! command -v dotnet >/dev/null 2>&1; then
+          echo "::error::dotnet was not found on this runner. Add actions/setup-dotnet@v4 (8.0.x or later) before this action."
+          exit 1
+        fi
+
+    - name: Install dvdrift
+      shell: bash
+      env:
+        TOOL_VERSION: ${{ inputs.tool-version }}
+      run: |
+        set -euo pipefail
+        if command -v dvdrift >/dev/null 2>&1; then
+          echo "dvdrift already on PATH: $(dvdrift --version)"
+          exit 0
+        fi
+        args=(tool install --global DataverseDrift)
+        if [ -n "$TOOL_VERSION" ]; then
+          args+=(--version "$TOOL_VERSION")
+        fi
+        dotnet "${args[@]}"
+        echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+    - name: Run dvdrift
+      id: diff
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        # Secrets travel as environment variables, never as command-line arguments.
+        DATAVERSE_URL: ${{ inputs.url }}
+        DATAVERSE_TENANT_ID: ${{ inputs.tenant-id }}
+        DATAVERSE_CLIENT_ID: ${{ inputs.client-id }}
+        DATAVERSE_CLIENT_SECRET: ${{ inputs.client-secret }}
+        DATAVERSE_ACCESS_TOKEN: ${{ inputs.access-token }}
+        BASELINE: ${{ inputs.baseline }}
+        CURRENT: ${{ inputs.current }}
+        FORMAT: ${{ inputs.format }}
+        OUT: ${{ inputs.out }}
+        CONFIG: ${{ inputs.config }}
+        OFFLINE: ${{ inputs.offline }}
+        FAIL_ON_CHANGE: ${{ inputs.fail-on-change }}
+        JOB_SUMMARY: ${{ inputs.job-summary }}
+      run: |
+        set -uo pipefail
+        export PATH="$PATH:$HOME/.dotnet/tools"
+
+        # --fail-on-change is always passed so exit code 1 can be read as "changed";
+        # whether that fails the step is decided below from the fail-on-change input.
+        args=("$BASELINE" "$CURRENT" --format "$FORMAT" --out "$OUT" --fail-on-change)
+        if [ -n "$CONFIG" ]; then
+          args+=(--config "$CONFIG")
+        fi
+        if [ "$OFFLINE" = "true" ]; then
+          args+=(--offline)
+        fi
+
+        dvdrift "${args[@]}"
+        code=$?
+
+        if [ "$code" -ge 2 ]; then
+          echo "::error::dvdrift failed with exit code $code"
+          exit "$code"
+        fi
+
+        changed=false
+        if [ "$code" -eq 1 ]; then
+          changed=true
+        fi
+        echo "changed=$changed" >> "$GITHUB_OUTPUT"
+        echo "report-path=$OUT" >> "$GITHUB_OUTPUT"
+
+        if [ "$JOB_SUMMARY" = "true" ] && [ "$FORMAT" = "md" ] && [ -f "$OUT" ]; then
+          cat "$OUT" >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+        if [ "$changed" = "true" ] && [ "$FAIL_ON_CHANGE" = "true" ]; then
+          echo "::error::Changes detected and fail-on-change is enabled."
+          exit 1
+        fi
