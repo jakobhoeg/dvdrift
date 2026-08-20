@@ -3,7 +3,7 @@
 The repository root ships a composite action. Reference it by tag:
 
 ```yaml
-- uses: YOUR-ORG/dataverse-solution-diff@v1
+- uses: jakobhoeg/dvdrift@v1
   id: diff
   with:
     baseline: baseline/

@@ -14,9 +14,9 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>dataverse;powerplatform;crm;diff;drift;alm;governance</PackageTags>
-    <!-- TODO: set once the repo has a public home
-    <RepositoryUrl>https://github.com/YOUR-ORG/dataverse-solution-diff</RepositoryUrl>
-    -->
+    <RepositoryUrl>https://github.com/jakobhoeg/dvdrift</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/jakobhoeg/dvdrift</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

@@ -44,7 +44,7 @@ jobs:
 
       - name: Diff against baseline
         id: diff
-        uses: YOUR-ORG/dataverse-solution-diff@v1
+        uses: jakobhoeg/dvdrift@v1
         with:
           baseline: baseline
           current: current.zip

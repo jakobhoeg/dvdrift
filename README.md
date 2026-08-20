@@ -127,7 +127,7 @@ loop and tell you whether anything changed:
 **GitHub Actions** — composite action ([reference](docs/action.md)):
 
 ```yaml
-- uses: YOUR-ORG/dataverse-solution-diff@v1
+- uses: jakobhoeg/dvdrift@v1
   id: diff
   with:
     baseline: baseline/

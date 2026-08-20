@@ -13,7 +13,7 @@ resources:
   repositories:
     - repository: dvdrift
       type: github               # or 'git' for an Azure Repos mirror
-      name: YOUR-ORG/dataverse-solution-diff
+      name: jakobhoeg/dvdrift
       endpoint: github-connection
       ref: refs/tags/v1
 
