@@ -1,7 +1,11 @@
 name: Release
 
+# Versions are derived from git by MinVer, never hand-edited:
+#   push to master  -> prerelease  (0.1.0-alpha.0.7)
+#   push tag v1.0.0 -> stable      (1.0.0) + GitHub release + moved `v1` tag
 on:
   push:
+    branches: [master]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -15,6 +19,9 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # MinVer walks tags and commit height; a shallow clone versions wrong.
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -26,22 +33,31 @@ jobs:
       - name: Pack tool
         run: dotnet pack src/Dataverse.SolutionDiff.Cli/Dataverse.SolutionDiff.Cli.csproj --configuration Release --output artifacts
 
+      - name: Report resolved version
+        id: version
+        run: |
+          pkg="$(ls artifacts/*.nupkg | head -1)"
+          version="$(basename "$pkg" .nupkg)"
+          version="${version#DataverseDrift.}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Packed DataverseDrift $version" >> "$GITHUB_STEP_SUMMARY"
+
       # Trusted Publishing: no long-lived secret. Requires a policy on nuget.org
       # (Account -> Trusted Publishing) bound to this repo, this workflow file,
-      # and the DataverseDrift package. Exchanges the OIDC token above for an
-      # API key valid for a few minutes, exported as NUGET_API_KEY.
+      # and the DataverseDrift package.
       - name: Authenticate to NuGet.org
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push'
         uses: NuGet/login@v1
         id: nuget-login
         with:
           user: jakobhoeg
 
       - name: Push to NuGet.org
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push'
         run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --skip-duplicate
 
       - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |

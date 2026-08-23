@@ -9,7 +9,6 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dvdrift</ToolCommandName>
     <PackageId>DataverseDrift</PackageId>
-    <Version>1.0.0</Version>
     <Authors>jakobhoeg</Authors>
     <Description>Know what changed in a shared Dataverse environment, who changed it, and what was left running. Deterministic, no AI.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
