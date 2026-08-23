@@ -13,17 +13,4 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <!-- Versions come from git, never from a hand-edited <Version> property.
-       An untagged commit builds as a prerelease (0.1.0-alpha.0.7); the commit
-       carrying a `v1.0.0` tag builds as stable 1.0.0. Requires full git history,
-       so CI checkouts must use fetch-depth: 0. -->
-  <PropertyGroup Label="Versioning">
-    <MinVerTagPrefix>v</MinVerTagPrefix>
-    <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" />
-  </ItemGroup>
-
 </Project>
