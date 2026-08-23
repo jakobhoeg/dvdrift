@@ -9,13 +9,18 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dvdrift</ToolCommandName>
     <PackageId>DataverseDrift</PackageId>
-    <Version>0.1.0</Version>
+    <Version>1.0.0</Version>
+    <Authors>jakobhoeg</Authors>
     <Description>Know what changed in a shared Dataverse environment, who changed it, and what was left running. Deterministic, no AI.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>dataverse;powerplatform;crm;diff;drift;alm;governance</PackageTags>
     <RepositoryUrl>https://github.com/jakobhoeg/dvdrift</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageProjectUrl>https://github.com/jakobhoeg/dvdrift</PackageProjectUrl>
   </PropertyGroup>
 
@@ -24,6 +29,7 @@
     <None Include="..\..\docs\*.md" Pack="true" PackagePath="docs\" />
     <None Include="..\..\docs\recipes\*.md" Pack="true" PackagePath="docs\recipes\" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
     <ProjectReference Include="..\Dataverse.SolutionDiff\Dataverse.SolutionDiff.csproj" />
   </ItemGroup>
 

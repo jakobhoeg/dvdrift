@@ -61,7 +61,7 @@ dvdrift <baseline> <current> [options]
 dvdrift --help
 ```
 
-See the [CLI reference](docs/cli.md) for all options, authentication environment
+See the [CLI reference](https://github.com/jakobhoeg/dvdrift/blob/master/docs/cli.md) for all options, authentication environment
 variables, and exit-code behavior.
 
 ## What it detects
@@ -124,7 +124,7 @@ The tool is deliberately storage- and CI-agnostic: you produce the two snapshots
 `dvdrift` compares them. Two ready-made integrations wrap the install-run-report
 loop and tell you whether anything changed:
 
-**GitHub Actions** — composite action ([reference](docs/action.md)):
+**GitHub Actions** — composite action ([reference](https://github.com/jakobhoeg/dvdrift/blob/master/docs/action.md)):
 
 ```yaml
 - uses: jakobhoeg/dvdrift@v1
@@ -139,7 +139,7 @@ loop and tell you whether anything changed:
 # report is in the job summary; steps.diff.outputs.changed is 'true' / 'false'
 ```
 
-**Azure Pipelines** — steps template ([reference](docs/azure-pipelines-template.md)):
+**Azure Pipelines** — steps template ([reference](https://github.com/jakobhoeg/dvdrift/blob/master/docs/azure-pipelines-template.md)):
 
 ```yaml
 - template: pipelines/templates/dvdrift-steps.yml@dvdrift
@@ -157,15 +157,15 @@ Both install the global tool from NuGet, keep credentials out of command lines,
 and leave gating to you (`fail-on-change` / `failOnChange`, off by default).
 End-to-end recipes:
 
-- [Generic "bring your own export" guide](docs/recipes/generic-bring-your-own-export.md)
-- [GitHub Actions + pac (deploy gate)](docs/recipes/github-actions-pac.md)
-- [Azure Pipelines + Power Platform Build Tools](docs/recipes/azure-pipelines-build-tools.md)
-- [Scheduled drift check (nightly export → report)](docs/recipes/scheduled-drift-check.md)
+- [Generic "bring your own export" guide](https://github.com/jakobhoeg/dvdrift/blob/master/docs/recipes/generic-bring-your-own-export.md)
+- [GitHub Actions + pac (deploy gate)](https://github.com/jakobhoeg/dvdrift/blob/master/docs/recipes/github-actions-pac.md)
+- [Azure Pipelines + Power Platform Build Tools](https://github.com/jakobhoeg/dvdrift/blob/master/docs/recipes/azure-pipelines-build-tools.md)
+- [Scheduled drift check (nightly export → report)](https://github.com/jakobhoeg/dvdrift/blob/master/docs/recipes/scheduled-drift-check.md)
 
 ## Configuration
 
 Per-repo overrides of the volatile-element strip list live in `dvdrift.json`.
-See [docs/configuration.md](docs/configuration.md).
+See [docs/configuration.md](https://github.com/jakobhoeg/dvdrift/blob/master/docs/configuration.md).
 
 ## Determinism guarantee
 
@@ -183,4 +183,4 @@ point-in-time read of live data and is clearly marked as such in the report.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/jakobhoeg/dvdrift/blob/master/LICENSE)
