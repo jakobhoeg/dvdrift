@@ -21,8 +21,8 @@ attribution and flow state from the Dataverse Web API.
 dotnet tool install --global DataverseDrift
 ```
 
-.NET 8 SDK required. The diff works fully offline; only the attribution join needs
-API access.
+Runs on .NET 8 or .NET 10. The diff works fully offline; only the attribution
+join needs API access.
 
 ## Usage
 

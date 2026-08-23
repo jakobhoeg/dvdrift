@@ -8,6 +8,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-23
+
+### Added
+
+- .NET 10 support. The tool now ships both `net8.0` and `net10.0` builds and
+  installs against whichever runtime you have; .NET 8 users are unaffected.
+
 ## [1.0.0] - 2026-08-23
 
 First public release.

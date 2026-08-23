@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <Description>Deterministic diff engine for Dataverse / Power Platform solution snapshots. Zero Dataverse dependencies.</Description>
     <!-- Bundled into the CLI tool package; not published on its own. The explicit
          PackageId avoids colliding with the CLI's PackageId (DataverseDrift)
