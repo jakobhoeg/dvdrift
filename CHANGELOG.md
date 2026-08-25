@@ -8,6 +8,15 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-08-25
+
+### Fixed
+
+- The GitHub Action no longer fails the step when changes are detected and
+  `fail-on-change` is `false`. GitHub runs composite steps with `bash -e`, which
+  aborted the script the moment `dvdrift` exited non-zero, so the `changed`
+  output and job summary were never produced.
+
 ## [1.1.0] - 2026-08-23
 
 ### Added
