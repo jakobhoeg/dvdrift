@@ -133,8 +133,12 @@ runs:
           args+=(--offline)
         fi
 
+        # GitHub runs composite steps with 'bash -e', so -e must be disabled
+        # around the call for the non-zero "changed" exit code to be readable.
+        set +e
         dvdrift "${args[@]}"
         code=$?
+        set -e
 
         if [ "$code" -ge 2 ]; then
           echo "::error::dvdrift failed with exit code $code"
