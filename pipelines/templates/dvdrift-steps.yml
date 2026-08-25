@@ -30,6 +30,9 @@ parameters:
     type: string
     default: md
     values: [md, json]
+  - name: summaryOnly
+    type: boolean
+    default: false
   - name: out
     type: string
     default: $(Build.ArtifactStagingDirectory)/dvdrift-report.md
@@ -119,6 +122,7 @@ steps:
                     '--out', '${{ parameters.out }}', '--fail-on-change')
         if ('${{ parameters.config }}') { $dvArgs += @('--config', '${{ parameters.config }}') }
         if ($env:DVDRIFT_OFFLINE -eq 'true') { $dvArgs += '--offline' }
+        if ($env:DVDRIFT_SUMMARY_ONLY -eq 'true') { $dvArgs += '--summary-only' }
 
         New-Item -ItemType Directory -Force -Path (Split-Path -Parent '${{ parameters.out }}') | Out-Null
         & dvdrift $dvArgs
@@ -149,6 +153,7 @@ steps:
       DATAVERSE_CLIENT_SECRET: ${{ parameters.clientSecret }}
       DATAVERSE_ACCESS_TOKEN: ${{ parameters.accessToken }}
       DVDRIFT_OFFLINE: ${{ lower(parameters.offline) }}
+      DVDRIFT_SUMMARY_ONLY: ${{ lower(parameters.summaryOnly) }}
       DVDRIFT_FAIL_ON_CHANGE: ${{ lower(parameters.failOnChange) }}
       DVDRIFT_SUMMARY: ${{ lower(parameters.buildSummary) }}
 

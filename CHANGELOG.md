@@ -8,6 +8,18 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-25
+
+### Added
+
+- `--summary-only` emits just the counts line, without the per-component tables,
+  for places where the full report is too verbose to embed - release notes, chat
+  notifications, PR comments. It composes with both formats: with `--format json`
+  the counts sit at the root of the document (`.added`, `.modified`, `.deleted`)
+  so notification and gating scripts need no Markdown parsing. Exposed as
+  `summary-only` on the GitHub Action and `summaryOnly` on the Azure Pipelines
+  template.
+
 ## [1.1.1] - 2026-08-25
 
 ### Fixed

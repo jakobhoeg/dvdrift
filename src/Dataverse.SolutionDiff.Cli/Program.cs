@@ -46,9 +46,14 @@ public static class Program
             {
                 var report = await DiffEngine.RunAsync(options.Baseline, options.Current, config, attributionSource).ConfigureAwait(false);
 
-                var output = string.Equals(options.Format, "json", StringComparison.OrdinalIgnoreCase)
-                    ? JsonReporter.Render(report)
-                    : MarkdownReporter.Render(report);
+                var json = string.Equals(options.Format, "json", StringComparison.OrdinalIgnoreCase);
+                var output = (json, options.SummaryOnly) switch
+                {
+                    (true, true) => JsonReporter.RenderSummary(report),
+                    (true, false) => JsonReporter.Render(report),
+                    (false, true) => MarkdownReporter.RenderSummary(report),
+                    (false, false) => MarkdownReporter.Render(report),
+                };
 
                 if (options.OutFile is not null)
                 {

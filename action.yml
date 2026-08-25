@@ -15,6 +15,10 @@ inputs:
     description: Report format, md or json.
     required: false
     default: md
+  summary-only:
+    description: Emit only the counts line instead of the full per-component report.
+    required: false
+    default: 'false'
   out:
     description: Path to write the report to.
     required: false
@@ -114,6 +118,7 @@ runs:
         BASELINE: ${{ inputs.baseline }}
         CURRENT: ${{ inputs.current }}
         FORMAT: ${{ inputs.format }}
+        SUMMARY_ONLY: ${{ inputs.summary-only }}
         OUT: ${{ inputs.out }}
         CONFIG: ${{ inputs.config }}
         OFFLINE: ${{ inputs.offline }}
@@ -131,6 +136,9 @@ runs:
         fi
         if [ "$OFFLINE" = "true" ]; then
           args+=(--offline)
+        fi
+        if [ "$SUMMARY_ONLY" = "true" ]; then
+          args+=(--summary-only)
         fi
 
         # GitHub runs composite steps with 'bash -e', so -e must be disabled

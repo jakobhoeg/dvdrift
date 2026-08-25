@@ -18,6 +18,7 @@ public sealed class CliOptions
 
         OPTIONS:
           --format <md|json>   Output format (default: md)
+          --summary-only       Emit just the counts line, without the per-component tables
           --out <file>         Write report to file instead of stdout
           --config <file>      Config file (default: dvdrift.json in working directory if present)
           --offline            Skip the Dataverse attribution/state join
@@ -50,6 +51,8 @@ public sealed class CliOptions
     public string? OutFile { get; private set; }
 
     public string? ConfigPath { get; private set; }
+
+    public bool SummaryOnly { get; private set; }
 
     public bool FailOnChange { get; private set; }
 
@@ -102,6 +105,9 @@ public sealed class CliOptions
                     break;
                 case "--access-token":
                     options.AccessToken = Value(args, ref i, arg);
+                    break;
+                case "--summary-only":
+                    options.SummaryOnly = true;
                     break;
                 case "--fail-on-change":
                     options.FailOnChange = true;
