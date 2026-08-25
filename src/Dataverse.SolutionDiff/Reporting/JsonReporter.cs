@@ -39,6 +39,23 @@ public static class JsonReporter
             }),
         };
 
+        return Serialize(payload);
+    }
+
+    /// <summary>
+    /// Counts only, hoisted to the root so notification and gating scripts can read
+    /// <c>.added</c> without walking into <c>.summary</c> or parsing Markdown.
+    /// </summary>
+    public static string RenderSummary(DiffReport report) => Serialize(new
+    {
+        added = report.Added,
+        modified = report.Modified,
+        deleted = report.Deleted,
+        attributionIncluded = report.AttributionIncluded,
+    });
+
+    private static string Serialize(object payload)
+    {
         var json = JsonSerializer.Serialize(payload, JsonOptions);
         return json.Replace("\r\n", "\n", StringComparison.Ordinal) + "\n";
     }

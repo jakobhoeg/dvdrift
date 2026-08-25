@@ -14,8 +14,7 @@ public static class MarkdownReporter
     {
         var sb = new StringBuilder();
         sb.Append("# Dataverse Solution Diff\n\n");
-        sb.Append(CultureInfo.InvariantCulture,
-            $"**{report.Added} added · {report.Modified} modified · {report.Deleted} deleted**\n\n");
+        sb.Append(CultureInfo.InvariantCulture, $"{Counts(report)}\n\n");
         sb.Append(report.AttributionIncluded
             ? "_Attribution: live Dataverse join (point-in-time)_\n"
             : "_Attribution: not included (offline run — state and modified-by unavailable)_\n");
@@ -48,6 +47,17 @@ public static class MarkdownReporter
 
         return sb.ToString();
     }
+
+    /// <summary>
+    /// The counts line on its own, for embedding where the full tables are too verbose -
+    /// release notes, chat notifications, PR comments. Byte-identical to the line the full
+    /// report opens with, so the compact and full outputs cannot drift apart.
+    /// </summary>
+    public static string RenderSummary(DiffReport report) => Counts(report) + "\n";
+
+    private static string Counts(DiffReport report) => string.Create(
+        CultureInfo.InvariantCulture,
+        $"**{report.Added} added · {report.Modified} modified · {report.Deleted} deleted**");
 
     private static string Esc(string? value) => (value ?? "—")
         .Replace("\r\n", "<br>", StringComparison.Ordinal)

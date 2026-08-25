@@ -34,6 +34,7 @@ pipeline artifact. It works on Windows and Linux agents.
 | `baseline` | *(required)* | Baseline snapshot: solution `.zip`, container zip/folder, raw extract, or pac-unpacked folder |
 | `current` | *(required)* | Current snapshot; the two formats need not match |
 | `format` | `md` | `md` or `json` |
+| `summaryOnly` | `false` | Emit only the counts line, without the per-component tables |
 | `out` | `$(Build.ArtifactStagingDirectory)/dvdrift-report.md` | Report file path |
 | `config` | *(none)* | Path to a `dvdrift.json` |
 | `workingDirectory` | `$(Build.SourcesDirectory)` | Directory snapshot paths resolve from |

@@ -60,6 +60,57 @@ public class CliTests : IDisposable
     }
 
     [Fact]
+    public async Task SummaryOnly_Markdown_IsCountsLineOnly()
+    {
+        var (baseline, current) = WriteSnapshots();
+        var outFile = Path.Combine(_root, "summary.md");
+
+        var exit = await Program.Main([baseline, current, "--offline", "--summary-only", "--out", outFile]);
+
+        Assert.Equal(0, exit);
+        var report = await File.ReadAllTextAsync(outFile);
+        Assert.Equal("**2 added · 2 modified · 1 deleted**\n", report);
+    }
+
+    [Fact]
+    public async Task SummaryOnly_Markdown_MatchesTheFullReportsCountsLine()
+    {
+        var (baseline, current) = WriteSnapshots();
+        var full = Path.Combine(_root, "full.md");
+        var summary = Path.Combine(_root, "summary.md");
+
+        await Program.Main([baseline, current, "--offline", "--out", full]);
+        await Program.Main([baseline, current, "--offline", "--summary-only", "--out", summary]);
+
+        var countsLine = (await File.ReadAllTextAsync(summary)).TrimEnd('\n');
+        Assert.Contains(countsLine, await File.ReadAllTextAsync(full), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task SummaryOnly_Json_HoistsCountsToTheRoot()
+    {
+        var (baseline, current) = WriteSnapshots();
+        var outFile = Path.Combine(_root, "summary.json");
+
+        var exit = await Program.Main([baseline, current, "--offline", "--format", "json", "--summary-only", "--out", outFile]);
+
+        Assert.Equal(0, exit);
+        using var doc = System.Text.Json.JsonDocument.Parse(await File.ReadAllTextAsync(outFile));
+        Assert.Equal(2, doc.RootElement.GetProperty("added").GetInt32());
+        Assert.Equal(2, doc.RootElement.GetProperty("modified").GetInt32());
+        Assert.Equal(1, doc.RootElement.GetProperty("deleted").GetInt32());
+        Assert.False(doc.RootElement.TryGetProperty("changes", out _));
+    }
+
+    [Fact]
+    public async Task SummaryOnly_StillGatesWithFailOnChange()
+    {
+        var (baseline, current) = WriteSnapshots();
+        var exit = await Program.Main([baseline, current, "--offline", "--summary-only", "--fail-on-change", "--out", Path.Combine(_root, "s.md")]);
+        Assert.Equal(1, exit);
+    }
+
+    [Fact]
     public async Task MissingInput_Exit3()
     {
         var exit = await Program.Main(["does-not-exist", "also-not", "--offline", "--out", Path.Combine(_root, "r.md")]);
