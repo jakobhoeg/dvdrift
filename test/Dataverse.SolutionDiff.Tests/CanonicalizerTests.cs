@@ -26,6 +26,61 @@ public class CanonicalizerTests
     }
 
     [Fact]
+    public void SolutionManifest_VersionOnlyChange_ProducesIdenticalOutput()
+    {
+        var a = """
+            <ImportExportXml version="9.2.0.0">
+              <SolutionManifest><UniqueName>ContosoBase</UniqueName><Version>1.0.0.1</Version><Managed>0</Managed></SolutionManifest>
+            </ImportExportXml>
+            """;
+        var b = """
+            <ImportExportXml version="9.2.0.0">
+              <SolutionManifest><UniqueName>ContosoBase</UniqueName><Version>1.0.0.9</Version><Managed>0</Managed></SolutionManifest>
+            </ImportExportXml>
+            """;
+
+        Assert.Equal(
+            Canonicalizer.CanonicalizeSolutionManifest(a, Config),
+            Canonicalizer.CanonicalizeSolutionManifest(b, Config));
+    }
+
+    [Fact]
+    public void SolutionManifest_RealChange_StillDiffers()
+    {
+        var a = """
+            <ImportExportXml version="9.2.0.0">
+              <SolutionManifest><UniqueName>ContosoBase</UniqueName><Version>1.0.0.1</Version><Managed>0</Managed></SolutionManifest>
+            </ImportExportXml>
+            """;
+        var b = """
+            <ImportExportXml version="9.2.0.0">
+              <SolutionManifest><UniqueName>ContosoBase</UniqueName><Version>1.0.0.9</Version><Managed>1</Managed></SolutionManifest>
+            </ImportExportXml>
+            """;
+
+        Assert.NotEqual(
+            Canonicalizer.CanonicalizeSolutionManifest(a, Config),
+            Canonicalizer.CanonicalizeSolutionManifest(b, Config));
+    }
+
+    [Fact]
+    public void SolutionManifest_NestedVersionElements_ArePreserved()
+    {
+        var a = """
+            <ImportExportXml>
+              <SolutionManifest><UniqueName>ContosoBase</UniqueName><Version>1.0.0.1</Version>
+                <MissingDependencies><MissingDependency><Required Version="1.0.0.1" /></MissingDependency></MissingDependencies>
+              </SolutionManifest>
+            </ImportExportXml>
+            """;
+        var b = a.Replace("<Required Version=\"1.0.0.1\" />", "<Required Version=\"2.0.0.0\" />", StringComparison.Ordinal);
+
+        Assert.NotEqual(
+            Canonicalizer.CanonicalizeSolutionManifest(a, Config),
+            Canonicalizer.CanonicalizeSolutionManifest(b, Config));
+    }
+
+    [Fact]
     public void Xml_StripRules_AreCaseInsensitive()
     {
         var config = new DiffConfig

@@ -53,6 +53,37 @@ public static class Canonicalizer
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Canonicalizes a solution.xml manifest. Identical to <see cref="CanonicalizeXml"/>
+    /// except that the solution version (SolutionManifest/Version) is dropped: Dataverse
+    /// and export pipelines auto-increment it between exports, which would otherwise
+    /// report every solution manifest as Modified in every comparison.
+    /// </summary>
+    public static string CanonicalizeSolutionManifest(string xml, DiffConfig config)
+    {
+        XDocument doc;
+        try
+        {
+            doc = XDocument.Parse(xml);
+        }
+        catch (XmlException)
+        {
+            return CanonicalizeText(xml);
+        }
+
+        if (doc.Root is null)
+        {
+            return CanonicalizeText(xml);
+        }
+
+        foreach (var manifest in doc.Root.DescendantsAndSelf("SolutionManifest").ToList())
+        {
+            manifest.Elements("Version").Remove();
+        }
+
+        return CanonicalizeXml(doc.ToString(SaveOptions.DisableFormatting), config);
+    }
+
     /// <summary>Canonicalizes JSON: recursively sorts object properties, normalizes formatting and line endings.</summary>
     public static string CanonicalizeJson(string json)
     {
