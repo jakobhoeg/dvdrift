@@ -6,7 +6,16 @@ version becomes that version's GitHub release notes, so write it for users.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.1] - 2026-08-29
+
+### Fixed
+
+- Solution manifests are no longer reported as modified when the only difference
+  is the solution version. Dataverse and export pipelines auto-increment
+  `SolutionManifest/Version` between exports, which made every comparison list
+  every `Solution manifest` component as modified. Other manifest changes (and
+  `Version` attributes elsewhere, such as dependency requirements) still diff as
+  before.
 
 ## [1.2.0] - 2026-08-25
 

@@ -94,7 +94,7 @@ public static partial class ComponentExtractor
 
         if (string.Equals(rel, "solution.xml", StringComparison.OrdinalIgnoreCase))
         {
-            components.Add(Make(ComponentType.Other, ScopedName(scope, "Solution manifest"), null, Canonicalizer.CanonicalizeXml(file.Text(), config)));
+            components.Add(Make(ComponentType.Other, ScopedName(scope, "Solution manifest"), null, Canonicalizer.CanonicalizeSolutionManifest(file.Text(), config)));
             return;
         }
 
