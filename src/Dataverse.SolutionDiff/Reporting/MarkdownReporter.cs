@@ -10,6 +10,12 @@ namespace Dataverse.SolutionDiff.Reporting;
 /// </summary>
 public static class MarkdownReporter
 {
+    /// <summary>
+    /// Groups larger than this render collapsed, so a big diff stays skimmable in a
+    /// GitHub job summary or PR comment; smaller ones stay open to read at a glance.
+    /// </summary>
+    private const int CollapseThreshold = 10;
+
     public static string Render(DiffReport report)
     {
         var sb = new StringBuilder();
@@ -34,7 +40,8 @@ public static class MarkdownReporter
                 continue;
             }
 
-            sb.Append(CultureInfo.InvariantCulture, $"\n### {kind}\n\n");
+            sb.Append(CultureInfo.InvariantCulture,
+                $"\n<details{(group.Count > CollapseThreshold ? "" : " open")}>\n<summary><b>{kind}</b> ({group.Count})</summary>\n\n");
             sb.Append("| Type | Component | Modified by | Modified on (UTC) |\n");
             sb.Append("|---|---|---|---|\n");
             foreach (var c in group)
@@ -43,6 +50,8 @@ public static class MarkdownReporter
                 sb.Append(CultureInfo.InvariantCulture,
                     $"| {c.Type} | {name} | {Esc(c.Attribution?.ModifiedBy)} | {Format(c.Attribution?.ModifiedOn)} |\n");
             }
+
+            sb.Append("\n</details>\n");
         }
 
         return sb.ToString();
