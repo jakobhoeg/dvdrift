@@ -147,6 +147,23 @@ public class DiffEngineTests : IDisposable
         Assert.Contains("Account.Information _(id changed)_", markdown, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Markdown_OmitsAttributionColumnsWhenNotJoined()
+    {
+        var report = new DiffReport(
+            1,
+            0,
+            0,
+            false,
+            [new ComponentChange(ComponentType.Flow, "MySyncFlow", ChangeKind.Added, false, null, null, null)]);
+
+        var markdown = MarkdownReporter.Render(report);
+
+        Assert.Contains("| Type | Component |\n|---|---|\n", markdown, StringComparison.Ordinal);
+        Assert.Contains("| Flow | MySyncFlow |\n", markdown, StringComparison.Ordinal);
+        Assert.DoesNotContain("Modified by", markdown, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData(9, " open")]
     [InlineData(10, "")]

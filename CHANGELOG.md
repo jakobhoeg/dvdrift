@@ -6,6 +6,18 @@ version becomes that version's GitHub release notes, so write it for users.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-08-30
+
+### Changed
+
+- `Markdown` reports now render each change section (`Added`, `Modified`, `Deleted`)
+  as a collapsible `<details>` block, with the section's count in the header, so a
+  large diff no longer floods a GitHub job summary or PR comment with hundreds of
+  table rows. Reports of more than 10 changes render every section collapsed.
+
+- Markdown reports without the attribution join (`--offline`, or no `--url`) no
+  longer render the `Modified by` and `Modified on (UTC)` columns. Scripts that parse the report by column should read `--format json` instead, where `attributionIncluded` says whether the join ran.
+
 ## [1.2.1] - 2026-08-29
 
 ### Fixed

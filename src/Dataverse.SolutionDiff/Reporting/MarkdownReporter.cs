@@ -44,13 +44,19 @@ public static class MarkdownReporter
 
             sb.Append(CultureInfo.InvariantCulture,
                 $"\n<details{openAttribute}>\n<summary><b>{kind}</b> ({group.Count})</summary>\n\n");
-            sb.Append("| Type | Component | Modified by | Modified on (UTC) |\n");
-            sb.Append("|---|---|---|---|\n");
+            // Without the join there is nothing to put in the attribution columns, so they
+            // are dropped rather than filled with a column of em dashes.
+            sb.Append(report.AttributionIncluded
+                ? "| Type | Component | Modified by | Modified on (UTC) |\n|---|---|---|---|\n"
+                : "| Type | Component |\n|---|---|\n");
             foreach (var c in group)
             {
                 var name = Esc(c.Name) + (c.IdChanged ? " _(id changed)_" : "");
-                sb.Append(CultureInfo.InvariantCulture,
-                    $"| {c.Type} | {name} | {Esc(c.Attribution?.ModifiedBy)} | {Format(c.Attribution?.ModifiedOn)} |\n");
+                sb.Append(report.AttributionIncluded
+                    ? string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"| {c.Type} | {name} | {Esc(c.Attribution?.ModifiedBy)} | {Format(c.Attribution?.ModifiedOn)} |\n")
+                    : string.Create(CultureInfo.InvariantCulture, $"| {c.Type} | {name} |\n"));
             }
 
             sb.Append("\n</details>\n");
