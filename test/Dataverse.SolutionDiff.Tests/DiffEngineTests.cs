@@ -147,6 +147,27 @@ public class DiffEngineTests : IDisposable
         Assert.Contains("Account.Information _(id changed)_", markdown, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(9, " open")]
+    [InlineData(10, "")]
+    public void Markdown_CollapsesEverySectionOrNone(int added, string openAttribute)
+    {
+        var many = Enumerable.Range(0, added)
+            .Select(i => new ComponentChange(
+                ComponentType.Flow, $"Flow{i}", ChangeKind.Added, false, null, null, null));
+        var one = new ComponentChange(
+            ComponentType.View, "Account.Active Accounts", ChangeKind.Deleted, false, null, null, null);
+        var report = new DiffReport(added, 0, 1, false, [.. many, one]);
+
+        var markdown = MarkdownReporter.Render(report);
+
+        Assert.Contains(
+            $"<details{openAttribute}>\n<summary><b>Added</b> ({added})</summary>", markdown, StringComparison.Ordinal);
+        Assert.Contains(
+            $"<details{openAttribute}>\n<summary><b>Deleted</b> (1)</summary>", markdown, StringComparison.Ordinal);
+        Assert.Equal(2, markdown.Split("</details>").Length - 1);
+    }
+
     [Fact]
     public void Markdown_EscapesTableBreakingContent()
     {

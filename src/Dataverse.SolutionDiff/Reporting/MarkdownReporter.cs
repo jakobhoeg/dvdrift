@@ -10,6 +10,13 @@ namespace Dataverse.SolutionDiff.Reporting;
 /// </summary>
 public static class MarkdownReporter
 {
+    /// <summary>
+    /// Reports with more changes than this render every section collapsed, so a big diff
+    /// stays skimmable in a GitHub job summary or PR comment. It is all-or-nothing: a mix of
+    /// open and collapsed sections makes the headers hard to pick out.
+    /// </summary>
+    private const int CollapseThreshold = 10;
+
     public static string Render(DiffReport report)
     {
         var sb = new StringBuilder();
@@ -26,6 +33,7 @@ public static class MarkdownReporter
             return sb.ToString();
         }
 
+        var openAttribute = report.Changes.Count > CollapseThreshold ? "" : " open";
         foreach (var kind in new[] { ChangeKind.Added, ChangeKind.Modified, ChangeKind.Deleted })
         {
             var group = report.Changes.Where(c => c.Kind == kind).ToList();
@@ -34,7 +42,8 @@ public static class MarkdownReporter
                 continue;
             }
 
-            sb.Append(CultureInfo.InvariantCulture, $"\n### {kind}\n\n");
+            sb.Append(CultureInfo.InvariantCulture,
+                $"\n<details{openAttribute}>\n<summary><b>{kind}</b> ({group.Count})</summary>\n\n");
             sb.Append("| Type | Component | Modified by | Modified on (UTC) |\n");
             sb.Append("|---|---|---|---|\n");
             foreach (var c in group)
@@ -43,6 +52,8 @@ public static class MarkdownReporter
                 sb.Append(CultureInfo.InvariantCulture,
                     $"| {c.Type} | {name} | {Esc(c.Attribution?.ModifiedBy)} | {Format(c.Attribution?.ModifiedOn)} |\n");
             }
+
+            sb.Append("\n</details>\n");
         }
 
         return sb.ToString();
